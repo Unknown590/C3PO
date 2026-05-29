@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width">
+</head>
+<body style="background:black;display:flex;align-items:center;justify-content:center;height:100vh">
+<button onclick="test()" style="padding:40px;font-size:30px;background:blue;color:white;border:none;border-radius:20px">
+  TAP ME
+</button>
+<script>
+async function test(){
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({audio:true});
+    alert('MIC WORKS');
+  }catch(e){
+    alert('ERROR: '+e.message);
+  }
+}
+</script>
+</body>
+</html>
