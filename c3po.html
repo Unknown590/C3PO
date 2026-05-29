@@ -8,217 +8,255 @@
 <meta name="apple-mobile-web-app-title" content="C-3PO">
 <title>C-3PO</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0}
 html,body{
   width:100%;height:100%;
-  background:#000810;
+  background:#000;
   overflow:hidden;
+  font-family:'Courier New',monospace;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
-  font-family:'Courier New',monospace;
 }
-#app{
-  position:fixed;inset:0;z-index:1;
-  display:flex;align-items:center;justify-content:center;
-  transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-#app.shifted{transform:translateX(-180px)}
 
-/* Full screen orb canvas — no border, no clip */
+/* ORB CANVAS — fills screen */
 #orb-canvas{
   position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
+  top:0;left:0;
+  width:100%;height:100%;
   display:block;
+  z-index:1;
+}
+
+/* BIG TAP BUTTON — sits over orb, transparent */
+#tap-btn{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:250px;height:250px;
+  border-radius:50%;
+  background:transparent;
+  border:none;
+  z-index:5;
   cursor:pointer;
-  z-index:2;
+  -webkit-appearance:none;
+  outline:none;
 }
 
+/* STATE LABEL */
 #state{
-  position:fixed;bottom:48px;left:0;right:0;
-  text-align:center;font-size:9px;letter-spacing:5px;
-  color:rgba(200,168,75,0.45);text-transform:uppercase;
-  pointer-events:none;z-index:3;
-  transition:opacity 0.5s,color 0.3s;
+  position:fixed;
+  bottom:50px;left:0;right:0;
+  text-align:center;
+  font-size:10px;letter-spacing:5px;
+  color:rgba(200,168,75,0.5);
+  text-transform:uppercase;
+  pointer-events:none;
+  z-index:6;
+  transition:all 0.4s;
 }
-#state.bright{color:rgba(220,185,80,0.95);text-shadow:0 0 12px rgba(220,185,80,0.6)}
-#state.hidden{opacity:0}
-
-#swipe-hint{
-  position:fixed;bottom:18px;left:0;right:0;text-align:center;
-  font-size:8px;letter-spacing:3px;color:rgba(0,60,150,0.3);
-  text-transform:uppercase;pointer-events:none;z-index:3;
-  animation:gone 3s ease forwards;animation-delay:3s;
+#state.active{
+  color:rgba(200,168,75,0.95);
+  text-shadow:0 0 10px rgba(200,168,75,0.6);
 }
-@keyframes gone{to{opacity:0}}
 
-/* ═══ PANEL ═══ */
+/* SWIPE HINT */
+#hint{
+  position:fixed;
+  bottom:18px;left:0;right:0;
+  text-align:center;
+  font-size:8px;letter-spacing:3px;
+  color:rgba(200,168,75,0.2);
+  text-transform:uppercase;
+  pointer-events:none;
+  z-index:6;
+  animation:fadeout 3s forwards;
+  animation-delay:4s;
+}
+@keyframes fadeout{to{opacity:0}}
+
+/* ═══ SIDE PANEL ═══ */
 #panel{
-  position:fixed;top:0;right:0;bottom:0;width:300px;
-  background:rgba(0,3,12,0.98);
-  border-left:1px solid rgba(0,70,160,0.25);
-  z-index:20;transform:translateX(100%);
+  position:fixed;
+  top:0;right:0;bottom:0;
+  width:300px;
+  background:rgba(2,4,10,0.98);
+  border-left:1px solid rgba(200,168,75,0.3);
+  z-index:20;
+  transform:translateX(100%);
   transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
-  overflow-y:auto;display:flex;flex-direction:column;
+  overflow-y:auto;
+  display:flex;flex-direction:column;
 }
 #panel.open{transform:translateX(0)}
 
-#ph{padding:52px 20px 14px;border-bottom:1px solid rgba(0,60,150,0.15);flex-shrink:0}
-#pn{font-size:15px;letter-spacing:6px;text-shadow:0 0 10px rgba(200,168,75,0.5);color:#e8c96a;font-weight:bold}
-#ps{font-size:8px;letter-spacing:3px;color:rgba(180,145,50,0.5);margin-top:3px}
+#ph{
+  padding:52px 20px 14px;
+  border-bottom:1px solid rgba(200,168,75,0.15);
+  flex-shrink:0;
+}
+#pn{
+  font-size:15px;letter-spacing:6px;
+  color:#e8c96a;font-weight:bold;
+  text-shadow:0 0 10px rgba(200,168,75,0.4);
+}
+#ps{font-size:8px;letter-spacing:3px;color:rgba(200,168,75,0.4);margin-top:3px}
 #cr{display:flex;align-items:center;gap:6px;margin-top:8px}
-#cd{width:4px;height:4px;border-radius:50%;background:rgba(0,50,130,0.4)}
+#cd{width:4px;height:4px;border-radius:50%;background:rgba(200,168,75,0.2)}
 #cd.on{background:#00cc44;box-shadow:0 0 5px #00cc44}
-#ct{font-size:8px;letter-spacing:2px;color:rgba(140,60,60,0.5)}
+#ct{font-size:8px;letter-spacing:2px;color:rgba(200,168,75,0.4)}
 
-.ps2{padding:14px 18px;border-bottom:1px solid rgba(0,60,150,0.1)}
-.pt{font-size:8px;letter-spacing:3px;color:rgba(180,145,50,0.55);
+.ps{padding:14px 18px;border-bottom:1px solid rgba(200,168,75,0.08)}
+.pt{font-size:8px;letter-spacing:3px;color:rgba(200,168,75,0.45);
   text-transform:uppercase;margin-bottom:10px;
   display:flex;align-items:center;justify-content:space-between}
-.pa{width:20px;height:20px;border:1px solid rgba(0,70,160,0.3);border-radius:4px;
-  background:none;color:rgba(160,60,60,0.7);font-size:14px;
+.pa{width:20px;height:20px;border:1px solid rgba(200,168,75,0.3);border-radius:4px;
+  background:none;color:rgba(200,168,75,0.7);font-size:14px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 
-#chat{flex:1;overflow-y:auto;padding:10px 16px;
-  display:flex;flex-direction:column;gap:6px;min-height:80px;max-height:180px}
+#chat{
+  flex:1;overflow-y:auto;padding:10px 16px;
+  display:flex;flex-direction:column;gap:6px;
+  min-height:80px;max-height:200px;
+}
 .msg{padding:6px 10px;border-radius:8px;font-size:11px;line-height:1.5;
   max-width:90%;animation:fi 0.2s ease}
 @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.msg.user{background:rgba(0,70,160,0.15);border:1px solid rgba(0,70,160,0.2);
-  color:rgba(220,160,160,0.9);align-self:flex-end}
-.msg.cipher{background:rgba(0,5,20,0.9);border:1px solid rgba(0,60,150,0.15);
-  color:rgba(200,140,140,0.85);align-self:flex-start}
+.msg.user{
+  background:rgba(0,100,200,0.15);
+  border:1px solid rgba(0,120,255,0.2);
+  color:rgba(180,220,255,0.9);
+  align-self:flex-end;
+}
+.msg.bot{
+  background:rgba(20,15,0,0.9);
+  border:1px solid rgba(200,168,75,0.15);
+  color:rgba(220,190,120,0.9);
+  align-self:flex-start;
+}
 
+/* PLUG ITEMS */
 .pi{display:flex;align-items:center;gap:8px;
-  padding:7px 0;border-bottom:1px solid rgba(0,60,150,0.07)}
+  padding:7px 0;border-bottom:1px solid rgba(200,168,75,0.06)}
 .pi:last-child{border-bottom:none}
-.pn2{flex:1;min-width:0}
-.pna{font-size:12px;color:rgba(220,160,160,0.9);letter-spacing:0.5px;
+.pna{flex:1;font-size:12px;color:rgba(220,190,120,0.9);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pip{font-size:9px;color:rgba(180,145,50,0.55);letter-spacing:1px;margin-top:1px}
+.pip{font-size:9px;color:rgba(200,168,75,0.4);letter-spacing:1px;margin-top:1px}
 .pac{display:flex;align-items:center;gap:5px;flex-shrink:0}
 .pb{width:22px;height:22px;border-radius:4px;background:none;cursor:pointer;
   font-size:10px;display:flex;align-items:center;justify-content:center;border:1px solid}
-.pe{color:rgba(140,60,60,0.6);border-color:rgba(0,60,150,0.15)}
-.pd{color:rgba(0,80,180,0.7);border-color:rgba(0,70,160,0.2)}
-#np{font-size:10px;color:rgba(140,60,60,0.4);letter-spacing:1px;padding:4px 0}
+.pe{color:rgba(200,168,75,0.5);border-color:rgba(200,168,75,0.15)}
+.pd{color:rgba(200,50,50,0.6);border-color:rgba(200,50,50,0.2)}
+#np{font-size:10px;color:rgba(200,168,75,0.3);letter-spacing:1px;padding:4px 0}
 
 .tog{position:relative;width:40px;height:20px;cursor:pointer;flex-shrink:0}
 .tog input{display:none}
 .tt{position:absolute;inset:0;border-radius:10px;
-  background:rgba(0,60,150,0.1);border:1px solid rgba(0,70,160,0.25);transition:all 0.3s}
+  background:rgba(200,168,75,0.08);border:1px solid rgba(200,168,75,0.2);transition:all 0.3s}
 .tk{position:absolute;top:3px;left:3px;width:12px;height:12px;
-  border-radius:50%;background:rgba(140,60,60,0.5);transition:all 0.3s}
-.tog input:checked~.tt{background:rgba(0,100,200,0.2);border-color:#0088ff}
+  border-radius:50%;background:rgba(200,168,75,0.4);transition:all 0.3s}
+.tog input:checked~.tt{background:rgba(0,120,255,0.2);border-color:#0088ff}
 .tog input:checked~.tk{left:23px;background:#0088ff}
 
-.lr{display:flex;align-items:center;justify-content:space-between;padding:7px 0}
-.ll{font-size:12px;color:rgba(220,160,160,0.9);letter-spacing:0.5px}
-.ls{font-size:9px;color:rgba(180,145,50,0.55);letter-spacing:1px;margin-top:1px}
-
-.st{font-size:12px;color:rgba(220,160,160,0.9);letter-spacing:0.5px;
+/* SPOTIFY */
+.st{font-size:12px;color:rgba(220,190,120,0.9);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
-.sa{font-size:9px;color:rgba(180,145,50,0.55);letter-spacing:1px;margin-bottom:8px}
+.sa{font-size:9px;color:rgba(200,168,75,0.4);letter-spacing:1px;margin-bottom:8px}
 .sb2{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px}
 .sb{width:34px;height:34px;border-radius:50%;
-  border:1px solid rgba(0,70,160,0.25);
-  background:rgba(0,60,150,0.05);color:rgba(160,60,60,0.8);
-  font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.sb.play{width:44px;height:44px;border-color:#0088ff;color:#0088ff;font-size:17px}
+  border:1px solid rgba(200,168,75,0.2);
+  background:rgba(200,168,75,0.04);
+  color:rgba(200,168,75,0.7);
+  font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.sb.play{width:44px;height:44px;border-color:rgba(0,140,255,0.6);color:#0099ff;font-size:17px}
 .vr{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .vr input[type=range]{flex:1;-webkit-appearance:none;height:1px;
-  background:rgba(0,70,160,0.3);border-radius:1px;outline:none}
+  background:rgba(200,168,75,0.2);border-radius:1px;outline:none}
 .vr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;
-  width:10px;height:10px;border-radius:50%;background:#0088ff;cursor:pointer}
-.si{width:100%;background:rgba(0,60,150,0.05);border:1px solid rgba(0,70,160,0.25);
-  border-radius:4px;padding:6px 8px;color:rgba(220,160,160,0.9);
+  width:10px;height:10px;border-radius:50%;background:#c8a84b;cursor:pointer}
+.si{width:100%;background:rgba(200,168,75,0.04);border:1px solid rgba(200,168,75,0.2);
+  border-radius:4px;padding:6px 8px;color:rgba(220,190,120,0.9);
   font-family:'Courier New',monospace;font-size:11px;outline:none;margin-bottom:5px}
-.si::placeholder{color:rgba(120,60,60,0.4)}
-.si:focus{border-color:#0088ff}
+.si::placeholder{color:rgba(200,168,75,0.3)}
+.si:focus{border-color:rgba(0,140,255,0.5)}
 .sr2{display:flex;flex-direction:column;gap:3px;max-height:90px;overflow-y:auto}
-.sre{padding:5px 7px;border-radius:4px;cursor:pointer;
-  border:1px solid transparent;transition:all 0.15s}
-.sre:active{background:rgba(0,60,150,0.1);border-color:rgba(0,70,160,0.25)}
-.srn{font-size:11px;color:rgba(220,160,160,0.9);
+.sre{padding:5px 7px;border-radius:4px;cursor:pointer;border:1px solid transparent}
+.sre:active{background:rgba(0,100,200,0.1);border-color:rgba(0,120,255,0.2)}
+.srn{font-size:11px;color:rgba(180,220,255,0.9);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sra{font-size:9px;color:rgba(140,60,60,0.5)}
+.sra{font-size:9px;color:rgba(200,168,75,0.4)}
 
+/* SETTINGS */
 .sf{margin-bottom:8px}
-.sl{font-size:8px;letter-spacing:2px;color:rgba(180,145,50,0.55);
+.sl{font-size:8px;letter-spacing:2px;color:rgba(200,168,75,0.4);
   margin-bottom:3px;display:block;text-transform:uppercase}
-.si2{width:100%;background:rgba(0,60,150,0.05);border:1px solid rgba(0,70,160,0.25);
-  border-radius:4px;padding:6px 8px;color:rgba(220,160,160,0.9);
+.si2{width:100%;background:rgba(200,168,75,0.04);border:1px solid rgba(200,168,75,0.2);
+  border-radius:4px;padding:6px 8px;color:rgba(220,190,120,0.9);
   font-family:'Courier New',monospace;font-size:11px;outline:none}
-.si2:focus{border-color:#0088ff}
-.cb{width:100%;padding:7px;border:1px solid #0088ff;border-radius:4px;
-  background:rgba(0,70,160,0.08);color:#0088ff;
+.si2:focus{border-color:rgba(0,140,255,0.5)}
+.cb{width:100%;padding:7px;
+  border:1px solid rgba(200,168,75,0.5);border-radius:4px;
+  background:rgba(200,168,75,0.06);color:#c8a84b;
   font-family:'Courier New',monospace;font-size:9px;
   letter-spacing:2px;cursor:pointer;margin-top:6px;text-transform:uppercase}
 
+/* MODAL */
 #mb{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:50;
   display:none;align-items:center;justify-content:center;padding:30px}
 #mb.open{display:flex}
-#md{background:#00060f;border:1px solid rgba(0,70,160,0.3);border-radius:8px;
+#md{background:#060810;border:1px solid rgba(200,168,75,0.25);border-radius:8px;
   padding:18px;width:100%;max-width:260px}
-.mt2{font-size:9px;letter-spacing:3px;color:#0088ff;
+.mt{font-size:9px;letter-spacing:3px;color:#c8a84b;
   text-transform:uppercase;margin-bottom:12px}
 .mf{margin-bottom:8px}
-.ml{font-size:8px;letter-spacing:2px;color:rgba(180,145,50,0.55);
+.ml{font-size:8px;letter-spacing:2px;color:rgba(200,168,75,0.4);
   margin-bottom:3px;display:block;text-transform:uppercase}
-.mi{width:100%;background:rgba(0,60,150,0.05);border:1px solid rgba(0,70,160,0.25);
-  border-radius:4px;padding:7px 8px;color:rgba(220,160,160,0.9);
+.mi{width:100%;background:rgba(200,168,75,0.04);border:1px solid rgba(200,168,75,0.2);
+  border-radius:4px;padding:7px 8px;color:rgba(220,190,120,0.9);
   font-family:'Courier New',monospace;font-size:12px;outline:none}
-.mi:focus{border-color:#0088ff}
+.mi:focus{border-color:rgba(0,140,255,0.5)}
 .mbs{display:flex;gap:8px;margin-top:12px}
 .mbtn{flex:1;padding:7px;border-radius:4px;
   font-family:'Courier New',monospace;font-size:9px;
   letter-spacing:1px;cursor:pointer;text-transform:uppercase;border:1px solid}
-.mc{border-color:rgba(0,70,160,0.25);background:none;color:rgba(140,60,60,0.5)}
-.ms{border-color:#0088ff;background:rgba(0,70,160,0.1);color:#0088ff}
+.mc{border-color:rgba(200,168,75,0.2);background:none;color:rgba(200,168,75,0.4)}
+.ms{border-color:rgba(0,140,255,0.5);background:rgba(0,100,200,0.08);color:#0099ff}
 
 ::-webkit-scrollbar{width:2px}
-::-webkit-scrollbar-thumb{background:rgba(0,70,160,0.3);border-radius:1px}
+::-webkit-scrollbar-thumb{background:rgba(200,168,75,0.2);border-radius:1px}
 </style>
 </head>
 <body>
 
-<!-- Full screen canvas — no wrapper div needed -->
 <canvas id="orb-canvas"></canvas>
 
+<!-- SIMPLE BUTTON — same approach as mictest.html that worked -->
+<button id="tap-btn" onclick="handleTap()"></button>
+
 <div id="state">C-3PO</div>
-<div id="swipe-hint">← swipe for controls</div>
+<div id="hint">← swipe for controls</div>
 
 <div id="panel">
   <div id="ph">
     <div id="pn">C-3PO</div>
-    <div id="ps">Jedi Intelligence Network</div>
+    <div id="ps">Jedi Intelligence System</div>
     <div id="cr"><div id="cd"></div><div id="ct">OFFLINE</div></div>
   </div>
 
-  <div class="ps2" style="padding-bottom:0;border-bottom:none">
+  <div class="ps" style="padding-bottom:0;border-bottom:none">
     <div class="pt">Transmissions</div>
   </div>
   <div id="chat"></div>
 
-  <div class="ps2">
-    <div class="pt">Room Lights <button class="pa" onclick="openModal()" aria-label="Add">+</button></div>
+  <div class="ps">
+    <div class="pt">Room Lights
+      <button class="pa" onclick="openModal()" aria-label="Add">+</button>
+    </div>
     <div id="plugs-list"></div>
     <div id="np">No lights configured</div>
   </div>
 
-  <div class="ps2">
-    <div class="pt">LED Strip</div>
-    <div class="lr">
-      <div><div class="ll">Room LEDs</div><div class="ls">Flashes red on wake</div></div>
-      <label class="tog">
-        <input type="checkbox" id="led-tog" onchange="toggleLED(this.checked)">
-        <div class="tt"></div><div class="tk"></div>
-      </label>
-    </div>
-  </div>
-
-  <div class="ps2">
+  <div class="ps">
     <div class="pt">Spotify</div>
     <div id="sp-track" class="st">Nothing playing</div>
     <div id="sp-artist" class="sa">—</div>
@@ -228,20 +266,20 @@ html,body{
       <button class="sb" onclick="spotCmd('next')" aria-label="Next">&#9654;&#9654;</button>
     </div>
     <div class="vr">
-      <span style="font-size:11px;color:rgba(140,60,60,0.5)">&#128266;</span>
+      <span style="font-size:11px;color:rgba(200,168,75,0.4)">&#128266;</span>
       <input type="range" min="0" max="100" value="70" oninput="spotVol(this.value)">
-      <span style="font-size:11px;color:rgba(140,60,60,0.5)">&#128266;</span>
+      <span style="font-size:11px;color:rgba(200,168,75,0.4)">&#128266;</span>
     </div>
     <input class="si" id="sp-search" type="text" placeholder="Search...">
     <div class="sr2" id="sp-results"></div>
   </div>
 
-  <div class="ps2">
+  <div class="ps">
     <div class="pt">Connection</div>
     <div class="sf"><label class="sl">Mac IP</label>
       <input class="si2" id="mac-ip" type="text" placeholder="192.168.1.XXX" onchange="save()"></div>
     <div class="sf"><label class="sl">Port</label>
-      <input class="si2" id="mac-port" type="text" placeholder="3000" value="3000" onchange="save()"></div>
+      <input class="si2" id="mac-port" type="text" value="3000" onchange="save()"></div>
     <div class="sf"><label class="sl">Spotify Token</label>
       <input class="si2" id="sp-token" type="password" placeholder="Bearer token..." onchange="save()"></div>
     <div class="sf"><label class="sl">Govee API Key</label>
@@ -252,7 +290,7 @@ html,body{
 
 <div id="mb" onclick="closeMBg(event)">
   <div id="md">
-    <div class="mt2" id="mt">Add Light</div>
+    <div class="mt" id="mt">Add Light</div>
     <div class="mf"><label class="ml">Name</label>
       <input class="mi" id="m-name" type="text" placeholder="Desk Lamp"></div>
     <div class="mf"><label class="ml">Plug IP</label>
@@ -276,14 +314,13 @@ const G={
   mediaRecorder:null,chunks:[],
   orbState:'idle',orbAnim:null,
   spPlaying:false,ledOn:false,
-  speed:1 // multiplier — increases on wake
+  speed:1
 };
 
-// ── FULL SCREEN CANVAS ────────────────────────────────────────
+// ── CANVAS ───────────────────────────────────────────────────
 const canvas=document.getElementById('orb-canvas');
 const ctx=canvas.getContext('2d');
 let W,H,CX,CY;
-
 function resize(){
   W=canvas.width=window.innerWidth;
   H=canvas.height=window.innerHeight;
@@ -291,74 +328,81 @@ function resize(){
 }
 resize();
 window.addEventListener('resize',resize);
-canvas.addEventListener('click',handleTap);
 
-// ── BLOBS — free floating, no clip, no border ─────────────────
-// Each blob: x,y relative to center, vx/vy velocity, r radius, base color
-const blobs=[
-  {x:0,   y:0,   vx:0.6, vy:0.4,  r:190, r2:0.0, g:0.45, b:0.95, a:0.90},
-  {x:60,  y:-50, vx:-0.5,vy:0.65, r:155, r2:0.0, g:0.40, b:0.90,a:0.80},
-  {x:-55, y:55,  vx:0.7, vy:-0.5, r:165, r2:0.0, g:0.42, b:0.88, a:0.85},
-  {x:30,  y:60,  vx:-0.6,vy:-0.55,r:135, r2:0.0, g:0.58, b:1.0, a:0.90},
-  {x:-40, y:-40, vx:0.55,vy:0.6,  r:145, r2:0.0, g:0.44, b:0.85, a:0.70},
+// ── ORBS ─────────────────────────────────────────────────────
+const orbs=[
+  {x:0,   y:0,   vx:0.6, vy:0.4,  r:70, color:'#0099ff'},
+  {x:80,  y:-60, vx:-0.5,vy:0.65, r:52, color:'#c8a020'},
+  {x:-70, y:65,  vx:0.7, vy:-0.5, r:60, color:'#0077ee'},
+  {x:40,  y:70,  vx:-0.6,vy:-0.55,r:45, color:'#e0b020'},
+  {x:-55, y:-50, vx:0.55,vy:0.6,  r:50, color:'#33aaff'},
 ];
 
-// Boundaries for roaming — blobs stay roughly centered
-const BOUND=100;
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
 
-function drawFrame(){
+function drawOrbs(){
   ctx.clearRect(0,0,W,H);
-  // Black background
-  ctx.fillStyle='#000810';
+  ctx.fillStyle='#000000';
   ctx.fillRect(0,0,W,H);
 
   const spd=G.speed;
+  const BOUND=100;
 
-  blobs.forEach(b=>{
-    // Move
-    b.x+=b.vx*spd;
-    b.y+=b.vy*spd;
-    // Bounce within boundary
-    if(b.x>BOUND){b.x=BOUND;b.vx*=-1;}
-    if(b.x<-BOUND){b.x=-BOUND;b.vx*=-1;}
-    if(b.y>BOUND){b.y=BOUND;b.vy*=-1;}
-    if(b.y<-BOUND){b.y=-BOUND;b.vy*=-1;}
+  orbs.forEach(o=>{
+    o.x+=o.vx*spd;o.y+=o.vy*spd;
+    if(o.x>BOUND){o.x=BOUND;o.vx*=-1;}
+    if(o.x<-BOUND){o.x=-BOUND;o.vx*=-1;}
+    if(o.y>BOUND){o.y=BOUND;o.vy*=-1;}
+    if(o.y<-BOUND){o.y=-BOUND;o.vy*=-1;}
 
-    // Draw radial gradient blob — no clip
-    const grd=ctx.createRadialGradient(
-      CX+b.x,CY+b.y,0,
-      CX+b.x,CY+b.y,b.r
-    );
-    grd.addColorStop(0,  `rgba(${Math.round(255*b.r2)},${Math.round(255*b.g)},${Math.round(255*b.b)},${b.a})`);
-    grd.addColorStop(0.4,`rgba(${Math.round(200*b.r2)},0,0,${b.a*0.5})`);
-    grd.addColorStop(1,  'rgba(0,0,0,0)');
-    ctx.fillStyle=grd;
+    const {r,g,b}=hexToRgb(o.color);
+    const cx=CX+o.x, cy=CY+o.y;
+
+    // Outer glow
+    const glow=ctx.createRadialGradient(cx,cy,o.r*0.6,cx,cy,o.r*2.2);
+    glow.addColorStop(0,`rgba(${r},${g},${b},0.25)`);
+    glow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=glow;
     ctx.fillRect(0,0,W,H);
+
+    // Crisp orb body
+    const grad=ctx.createRadialGradient(cx-o.r*0.3,cy-o.r*0.3,0,cx,cy,o.r);
+    grad.addColorStop(0,'rgba(255,255,255,0.95)');
+    grad.addColorStop(0.2,'rgba(255,255,255,0.7)');
+    grad.addColorStop(0.5,`rgba(${r},${g},${b},0.95)`);
+    grad.addColorStop(0.8,`rgba(${r},${g},${b},0.85)`);
+    grad.addColorStop(1,`rgba(${Math.round(r*0.5)},${Math.round(g*0.5)},${Math.round(b*0.5)},0.6)`);
+    ctx.beginPath();
+    ctx.arc(cx,cy,o.r,0,Math.PI*2);
+    ctx.fillStyle=grad;
+    ctx.fill();
+
+    // Bright rim
+    ctx.beginPath();
+    ctx.arc(cx,cy,o.r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(${r},${g},${b},0.8)`;
+    ctx.lineWidth=1.5;
+    ctx.stroke();
   });
 
-  // Blue-gold core glow
-  const core=ctx.createRadialGradient(CX,CY,0,CX,CY,80);
-  const coreA=G.orbState==='listen'?0.85:G.orbState==='speak'?0.7:0.50;
-  core.addColorStop(0,`rgba(200,235,255,${coreA})`);
-  core.addColorStop(0.5,`rgba(0,120,220,${coreA*0.4})`);
-  core.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=core;
-  ctx.fillRect(0,0,W,H);
-
-  G.orbAnim=requestAnimationFrame(drawFrame);
+  G.orbAnim=requestAnimationFrame(drawOrbs);
 }
-drawFrame();
+drawOrbs();
 
-// Speed control — smoothly ramp up/down
-let speedTarget=1;
-let speedInterval=null;
-function setSpeed(target){
-  speedTarget=target;
-  if(speedInterval)clearInterval(speedInterval);
-  speedInterval=setInterval(()=>{
-    const diff=speedTarget-G.speed;
-    if(Math.abs(diff)<0.05){G.speed=speedTarget;clearInterval(speedInterval);speedInterval=null;}
-    else{G.speed+=diff*0.08;}
+// Speed
+let speedTarget=1,speedInt=null;
+function setSpeed(t){
+  speedTarget=t;
+  if(speedInt)clearInterval(speedInt);
+  speedInt=setInterval(()=>{
+    const d=speedTarget-G.speed;
+    if(Math.abs(d)<0.05){G.speed=speedTarget;clearInterval(speedInt);speedInt=null;}
+    else G.speed+=d*0.08;
   },16);
 }
 
@@ -367,33 +411,31 @@ const stEl=document.getElementById('state');
 function setState(s,lbl){
   G.orbState=s;
   stEl.textContent=lbl||'C-3PO';
-  if(s==='idle'){stEl.className='hidden';setSpeed(1);}
-  else if(s==='listen'){stEl.className='bright';setSpeed(4.5);}
-  else if(s==='think'){stEl.className='bright';setSpeed(0.4);}
-  else if(s==='speak'){stEl.className='bright';setSpeed(2.5);}
+  stEl.className=s==='idle'?'':'active';
+  if(s==='idle')setSpeed(1);
+  else if(s==='listen')setSpeed(4.5);
+  else if(s==='think')setSpeed(0.4);
+  else if(s==='speak')setSpeed(2.5);
 }
 setState('idle');
-setTimeout(()=>{stEl.classList.add('hidden')},2500);
+setTimeout(()=>{stEl.className=''},3000);
 
 // ── CHAT ──────────────────────────────────────────────────────
 const chatEl=document.getElementById('chat');
 function addMsg(t,f){
-  const d=document.createElement('div');d.className='msg '+f;d.textContent=t;
-  chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;
+  const d=document.createElement('div');
+  d.className='msg '+f;d.textContent=t;
+  chatEl.appendChild(d);
+  chatEl.scrollTop=chatEl.scrollHeight;
 }
 
-// ── RECORDING ─────────────────────────────────────────────────
-async function handleTap(e){
-  // Ignore taps on panel
-  if(document.getElementById('panel').contains(e.target))return;
-  if(G.listening){await stopRec();}
-  else{
-    if(!G.connected){
-      // quick red flash
-      setSpeed(5);setTimeout(()=>setSpeed(1),600);return;
-    }
-    await startRec();
+// ── RECORDING — same pattern as mictest.html that worked ─────
+async function handleTap(){
+  if(G.listening){
+    await stopRec();
+    return;
   }
+  await startRec();
 }
 
 async function startRec(){
@@ -406,8 +448,10 @@ async function startRec(){
     G.mediaRecorder.start();
     G.listening=true;
     setState('listen','LISTENING');
-    ledFlash();
-  }catch(e){addMsg('Microphone access required.','cipher')}
+  }catch(e){
+    addMsg('Mic error: '+e.message,'bot');
+    if(!G.panelOpen)togglePanel();
+  }
 }
 
 async function stopRec(){
@@ -425,9 +469,19 @@ async function processAudio(){
   try{
     const r=await fetch(`http://${G.macIP}:${G.macPort}/transcribe`,{method:'POST',body:fd});
     const d=await r.json();
-    if(d.text&&d.text.trim()){addMsg(d.text,'user');await sendChat(d.text);}
-    else{setState('idle');addMsg('Signal lost in the Force.','cipher');}
-  }catch(e){setState('idle');addMsg('No response from the temple.','cipher');setOffline();}
+    if(d.text&&d.text.trim()){
+      addMsg(d.text,'user');
+      if(!G.panelOpen)togglePanel();
+      await sendChat(d.text);
+    }else{
+      setState('idle');
+      addMsg('No signal.','bot');
+    }
+  }catch(e){
+    setState('idle');
+    addMsg('Mac offline.','bot');
+    setOffline();
+  }
 }
 
 async function sendChat(text){
@@ -437,34 +491,16 @@ async function sendChat(text){
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({message:text})});
     const d=await r.json();
-    setState('speak','TRANSMITTING');
-    addMsg(d.response,'cipher');
+    setState('speak','SPEAKING');
+    addMsg(d.response,'bot');
     await fetch(`http://${G.macIP}:${G.macPort}/speak`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({text:d.response})});
     setTimeout(()=>setState('idle'),2000);
-  }catch(e){setState('idle');addMsg('Connection to the Force lost.','cipher');}
-}
-
-// ── LED ───────────────────────────────────────────────────────
-async function goveeCmd(cmd){
-  if(!G.goveeKey)return;
-  const devId=localStorage.getItem('c_gd')||'';
-  const model=localStorage.getItem('c_gm')||'';
-  if(!devId)return;
-  try{
-    await fetch('https://developer-api.govee.com/v1/devices/control',{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','Govee-API-Key':G.goveeKey},
-      body:JSON.stringify({device:devId,model,cmd})
-    });
-  }catch(e){}
-}
-async function toggleLED(on){G.ledOn=on;await goveeCmd({name:'turn',value:on?'on':'off'});}
-async function ledFlash(){
-  if(!G.ledOn||!G.goveeKey)return;
-  await goveeCmd({name:'color',value:{r:255,g:0,b:0}});
-  setTimeout(async()=>{await goveeCmd({name:'color',value:{r:80,g:0,b:0}});},2500);
+  }catch(e){
+    setState('idle');
+    addMsg('Response failed.','bot');
+  }
 }
 
 // ── PLUGS ─────────────────────────────────────────────────────
@@ -477,13 +513,19 @@ function renderPl(){
   none.style.display='none';
   G.plugs.forEach((p,i)=>{
     const d=document.createElement('div');d.className='pi';
-    d.innerHTML=`<div class="pn2"><div class="pna">${p.name}</div><div class="pip">${p.ip}</div></div>
-    <div class="pac">
-      <button class="pb pe" onclick="editPlug(${i})">&#9998;</button>
-      <button class="pb pd" onclick="delPlug(${i})">&#10005;</button>
-      <label class="tog"><input type="checkbox" ${p.on?'checked':''} onchange="togPlug(${i},this.checked)">
-      <div class="tt"></div><div class="tk"></div></label>
-    </div>`;
+    d.innerHTML=`
+      <div style="flex:1;min-width:0">
+        <div class="pna">${p.name}</div>
+        <div class="pip">${p.ip}</div>
+      </div>
+      <div class="pac">
+        <button class="pb pe" onclick="editPlug(${i})">&#9998;</button>
+        <button class="pb pd" onclick="delPlug(${i})">&#10005;</button>
+        <label class="tog">
+          <input type="checkbox" ${p.on?'checked':''} onchange="togPlug(${i},this.checked)">
+          <div class="tt"></div><div class="tk"></div>
+        </label>
+      </div>`;
     list.appendChild(d);
   });
 }
@@ -513,47 +555,61 @@ function savePlug(){
   savePl();renderPl();closeModal();
 }
 function editPlug(i){openModal(i);}
-function delPlug(i){if(confirm(`Remove "${G.plugs[i].name}"?`)){G.plugs.splice(i,1);savePl();renderPl();}}
+function delPlug(i){
+  if(confirm(`Remove "${G.plugs[i].name}"?`)){
+    G.plugs.splice(i,1);savePl();renderPl();
+  }
+}
 
 // ── SPOTIFY ───────────────────────────────────────────────────
 function spotCmd(c){
   if(!G.spToken)return;
-  fetch(`https://api.spotify.com/v1/me/player/${c}`,{method:'POST',headers:{Authorization:'Bearer '+G.spToken}});
+  fetch(`https://api.spotify.com/v1/me/player/${c}`,{
+    method:'POST',headers:{Authorization:'Bearer '+G.spToken}});
 }
 function spotToggle(){
   G.spPlaying=!G.spPlaying;
   document.getElementById('sp-play').innerHTML=G.spPlaying?'&#9646;&#9646;':'&#9654;';
   if(!G.spToken)return;
-  fetch(`https://api.spotify.com/v1/me/player/${G.spPlaying?'play':'pause'}`,{method:'PUT',headers:{Authorization:'Bearer '+G.spToken}});
+  fetch(`https://api.spotify.com/v1/me/player/${G.spPlaying?'play':'pause'}`,{
+    method:'PUT',headers:{Authorization:'Bearer '+G.spToken}});
 }
 function spotVol(v){
   if(!G.spToken)return;
-  fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${Math.round(v)}`,{method:'PUT',headers:{Authorization:'Bearer '+G.spToken}});
+  fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${Math.round(v)}`,{
+    method:'PUT',headers:{Authorization:'Bearer '+G.spToken}});
 }
 async function searchSpot(){
   const q=document.getElementById('sp-search').value.trim();
   if(!q||!G.spToken)return;
   try{
-    const r=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=5`,{headers:{Authorization:'Bearer '+G.spToken}});
+    const r=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=5`,{
+      headers:{Authorization:'Bearer '+G.spToken}});
     const d=await r.json();
     const res=document.getElementById('sp-results');res.innerHTML='';
     (d.tracks?.items||[]).forEach(t=>{
       const el=document.createElement('div');el.className='sre';
-      el.innerHTML=`<div class="srn">${t.name}</div><div class="sra">${t.artists.map(a=>a.name).join(', ')}</div>`;
+      el.innerHTML=`<div class="srn">${t.name}</div>
+        <div class="sra">${t.artists.map(a=>a.name).join(', ')}</div>`;
       el.onclick=()=>{
-        fetch('https://api.spotify.com/v1/me/player/play',{method:'PUT',
+        fetch('https://api.spotify.com/v1/me/player/play',{
+          method:'PUT',
           headers:{Authorization:'Bearer '+G.spToken,'Content-Type':'application/json'},
           body:JSON.stringify({uris:[t.uri]})});
         document.getElementById('sp-track').textContent=t.name;
         document.getElementById('sp-artist').textContent=t.artists.map(a=>a.name).join(', ');
-        G.spPlaying=true;document.getElementById('sp-play').innerHTML='&#9646;&#9646;';
-        res.innerHTML='';document.getElementById('sp-search').value='';
+        G.spPlaying=true;
+        document.getElementById('sp-play').innerHTML='&#9646;&#9646;';
+        res.innerHTML='';
+        document.getElementById('sp-search').value='';
       };
       res.appendChild(el);
     });
   }catch(e){}
 }
-document.getElementById('sp-search').addEventListener('keydown',e=>{if(e.key==='Enter')searchSpot();});
+document.getElementById('sp-search').addEventListener('keydown',e=>{
+  if(e.key==='Enter')searchSpot();
+});
 
 // ── CONNECTION ────────────────────────────────────────────────
 function save(){
@@ -561,23 +617,28 @@ function save(){
   G.macPort=document.getElementById('mac-port').value;
   G.spToken=document.getElementById('sp-token').value;
   G.goveeKey=document.getElementById('govee-key').value;
-  localStorage.setItem('c_ip',G.macIP);localStorage.setItem('c_port',G.macPort);
-  localStorage.setItem('c_sp',G.spToken);localStorage.setItem('c_gv',G.goveeKey);
+  localStorage.setItem('c_ip',G.macIP);
+  localStorage.setItem('c_port',G.macPort);
+  localStorage.setItem('c_sp',G.spToken);
+  localStorage.setItem('c_gv',G.goveeKey);
 }
 async function testConn(){
   save();if(!G.macIP)return;
   try{
-    const r=await fetch(`http://${G.macIP}:${G.macPort}/ping`,{signal:AbortSignal.timeout(3000)});
+    const r=await fetch(`http://${G.macIP}:${G.macPort}/ping`,{
+      signal:AbortSignal.timeout(3000)});
     if(r.ok)setOnline();else setOffline();
   }catch(e){setOffline();}
 }
 function setOnline(){
-  G.connected=true;document.getElementById('cd').className='on';
+  G.connected=true;
+  document.getElementById('cd').className='on';
   document.getElementById('ct').textContent='ONLINE';
-  addMsg('Connection established. May the Force be with you.','cipher');
+  addMsg('May the Force be with you.','bot');
 }
 function setOffline(){
-  G.connected=false;document.getElementById('cd').className='';
+  G.connected=false;
+  document.getElementById('cd').className='';
   document.getElementById('ct').textContent='OFFLINE';
 }
 
@@ -587,7 +648,9 @@ function togglePanel(){
   document.getElementById('panel').classList.toggle('open',G.panelOpen);
 }
 let tx=0,ty=0;
-document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchstart',e=>{
+  tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+},{passive:true});
 document.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-tx;
   const dy=Math.abs(e.changedTouches[0].clientY-ty);
@@ -596,11 +659,12 @@ document.addEventListener('touchend',e=>{
   if(dx>50&&G.panelOpen)togglePanel();
 },{passive:true});
 document.addEventListener('touchstart',e=>{
-  if(G.panelOpen&&!document.getElementById('panel').contains(e.target))togglePanel();
+  if(G.panelOpen&&!document.getElementById('panel').contains(e.target)&&
+     e.target.id!=='tap-btn')togglePanel();
 },{passive:true});
 
 // ── INIT ──────────────────────────────────────────────────────
-(function init(){
+(function(){
   if(G.macIP)document.getElementById('mac-ip').value=G.macIP;
   document.getElementById('mac-port').value=G.macPort;
   if(G.spToken)document.getElementById('sp-token').value=G.spToken;
